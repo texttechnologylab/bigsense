@@ -50,7 +50,9 @@ def disambiguate():
 	input_json_temp = request.get_json(force=True)
 	input_json = input_json_temp["paragraphs"]
 	
-	if USE_CORENLP:
+	process_with_corenlp = input_json_temp["use_corenlp"] if "use_corenlp" in input_json_temp else False
+	
+	if USE_CORENLP and process_with_corenlp:
 		results = disambiguator.disambiguate(input_json)
 	else:
 		input_paragraphs = list(map(lambda segment: list(map(lambda token_json: json_to_token(token_json), segment)), input_json))
