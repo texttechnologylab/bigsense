@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 import argparse
 import ned
+from flask_cors import CORS
 
 arg_parser = argparse.ArgumentParser(description="NED Server")
 arg_parser.add_argument("--model", type=str, required=True, help="Path to model")
@@ -16,6 +17,7 @@ if USE_CORENLP:
 disambiguator = ned.Disambiguator(args.model, corenlp_bridge=corenlp_bridge, worker_count=args.worker_count)
 
 app = Flask(__name__)
+CORS(app)
 
 
 def json_to_token(token_json) -> ned.Token:
