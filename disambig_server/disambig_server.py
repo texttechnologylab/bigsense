@@ -7,7 +7,13 @@ arg_parser.add_argument("--model", type=str, required=True, help="Path to model"
 arg_parser.add_argument("--worker_count", type=int, required=False, help="Number of NN instances")
 args = arg_parser.parse_args()
 
-disambiguator = ned.Disambiguator(args.model, worker_count=args.worker_count)
+USE_CORENLP = True
+
+corenlp_bridge = None
+if USE_CORENLP:
+	corenlp_bridge = ned.CoreNlpBridge("../stanford-corenlp-full-2017-06-09/stanford-corenlp-3.8.0.jar:../stanford-corenlp-full-2017-06-09/stanford-corenlp-3.8.0-models.jar")
+
+disambiguator = ned.Disambiguator(args.model, corenlp_bridge=corenlp_bridge, worker_count=args.worker_count)
 
 app = Flask(__name__)
 
@@ -43,10 +49,12 @@ def disambiguate():
 	"""
 	input_json_temp = request.get_json(force=True)
 	input_json = input_json_temp["paragraphs"]
-
-	input_paragraphs = list(map(lambda segment: list(map(lambda token_json: json_to_token(token_json), segment)), input_json))
-
-	results = disambiguator.disambiguate_tokenized_segments(input_paragraphs)
+	
+	if USE_CORENLP:
+		results = disambiguator.disambiguate(input_json)
+	else:
+		input_paragraphs = list(map(lambda segment: list(map(lambda token_json: json_to_token(token_json), segment)), input_json))
+		results = disambiguator.disambiguate_tokenized_segments(input_paragraphs)
 
 	return jsonify({"results": list(map(lambda x: {"start": x[0], "end": x[1], "url": x[2]}, results))})
 
